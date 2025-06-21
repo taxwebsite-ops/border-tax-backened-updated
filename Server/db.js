@@ -1,5 +1,5 @@
 const mongoose = require("mongoose")
 
-const connectDb  = mongoose.connect("mongodb://localhost:27017/BorderTax")
+const connectDb  = mongoose.connect("mongodb+srv://gaurbhaiya:gaur@gaur.ewadmvd.mongodb.net/BordertaxGaur")
 
 module.exports=connectDb

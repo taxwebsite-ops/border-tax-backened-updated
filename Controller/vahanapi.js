@@ -12,19 +12,35 @@ router.post('/send-sms', async (req, res) => {
   // Fast2SMS POST API details
   const apiUrl = 'https://www.fast2sms.com/dev/bulkV2';
   const headers = {
-    authorization: 'PN3wsGupLU1dJsadbRvmZaHSxurM61Cxj7uEkxbdHKvSWB841ph7XnEnY89k',
+    authorization: process.env.FAST2SMS_API_KEY,
     'Content-Type': 'application/json'
   };
 
-  const data = {
-    route: "dlt",
-    sender_id: "VAHAN",
-    message: smsMessage,
-    variables_values: "",
-    schedule_time: "", 
-    flash: 0,
-    numbers: mobileNo
-  };
+  const templateId = process.env.FAST2SMS_TEMPLATE_ID;
+  const senderId = process.env.FAST2SMS_SENDER_ID || 'VAHAN';
+
+  // Fast2SMS's "dlt" route requires `message` to be the numeric DLT-approved
+  // Template/Message ID (not free text), with variables_values filling the
+  // template's placeholders in order. Until FAST2SMS_TEMPLATE_ID is set in
+  // .env, fall back to the non-DLT "q" (Quick SMS) route so sending still
+  // works for testing.
+  const data = templateId
+    ? {
+        route: 'dlt',
+        sender_id: senderId,
+        message: templateId,
+        variables_values: `${vehicleNo}|${totalAmount}|${taxFromDate}|${taxUptoDate}`,
+        schedule_time: '',
+        flash: 0,
+        numbers: mobileNo,
+      }
+    : {
+        route: 'q',
+        message: smsMessage,
+        language: 'english',
+        flash: 0,
+        numbers: mobileNo,
+      };
 
   try {
     // Send SMS using POST request

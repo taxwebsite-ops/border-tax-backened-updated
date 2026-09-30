@@ -1,3 +1,4 @@
+require("dotenv").config();
 const express = require("express");
 const connectDb = require("./Server/db");
 const userRouter = require("./Controller/userController");
@@ -17,7 +18,8 @@ app.use("/user",vahanapi)
 // http://localhost:3000/vechile/getVehicles
 app.use("/admin",adminRouter)
 app.use("/vechile",vehicleRouter)
-app.listen(3000,()=>{
+const PORT = process.env.PORT || 3000
+app.listen(PORT,()=>{
     connectDb
-    console.log("Server is running fine at port  3000")
+    console.log("Server is running fine at port  "+PORT)
 })

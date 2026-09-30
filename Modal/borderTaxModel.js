@@ -65,6 +65,8 @@ const vehicleSchema = new mongoose.Schema({
   numberOfPeriod: String,
   basicPermitValidity: String,
   permitNumber: String,
+  vehicleType: String,
+  permitValidity: String,
   taxAmount: String,
   barrierName: String,
   districtName: String,

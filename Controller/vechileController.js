@@ -1,17 +1,65 @@
 const express = require('express');
 const vehicleModel = require('../Modal/borderTaxModel.js');
+const counterModel = require('../Modal/counterModel.js');
 const vehicleRouter = express.Router();
+
+// Receipt number prefix per state, and each state's own sequence counter
+// (all counters start at 21825952 and increment independently, per state)
+function getStatePrefix(state) {
+  const s = (state || '').toLowerCase();
+  if (s.includes('haryana')) return { key: 'haryana', prefix: 'HRR' };
+  if (s.includes('uttarakhand') || s === 'uk') return { key: 'uttarakhand', prefix: 'UKT' };
+  if (s.includes('punjab')) return { key: 'punjab', prefix: 'PBR' };
+  if (s.includes('madhya') || s === 'mp') return { key: 'mp', prefix: 'MPT' };
+  if (s.includes('rajasthan')) return { key: 'rajasthan', prefix: 'RJT' };
+  if (s.includes('up') || s.includes('uttar pradesh')) return { key: 'up', prefix: 'UPT' };
+  return null;
+}
+
+async function getNextSeq(stateKey) {
+  let doc = await counterModel.findOneAndUpdate(
+    { state: stateKey },
+    { $inc: { seq: 1 } },
+    { new: true }
+  );
+  if (!doc) {
+    try {
+      doc = await counterModel.create({ state: stateKey, seq: 21825952 });
+    } catch (e) {
+      // another request created it first between our find and create; just increment now
+      doc = await counterModel.findOneAndUpdate(
+        { state: stateKey },
+        { $inc: { seq: 1 } },
+        { new: true }
+      );
+    }
+  }
+  return doc.seq;
+}
+
+function todayYYMMDD() {
+  const d = new Date();
+  const yy = String(d.getFullYear()).slice(-2);
+  const mm = String(d.getMonth() + 1).padStart(2, '0');
+  const dd = String(d.getDate()).padStart(2, '0');
+  return `${yy}${mm}${dd}`;
+}
 
 // POST: Create a new vehicle
 vehicleRouter.post('/createVehicle', async (req, res) => {
   const payload = req.body;
 
   try {
-  
+    const stateInfo = getStatePrefix(payload.state);
+    if (stateInfo) {
+      const seq = await getNextSeq(stateInfo.key);
+      payload.uptNumber = `${stateInfo.prefix}${todayYYMMDD()}${seq}`;
+    }
+
     const newVehicle = await vehicleModel.create(payload);
-    res.status(200).send(newVehicle);  
+    res.status(200).send(newVehicle);
   } catch (error) {
-    res.status(401).json({ msg: error.message });  
+    res.status(401).json({ msg: error.message });
   }
 });
 

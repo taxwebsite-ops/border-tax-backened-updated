@@ -4,7 +4,9 @@ const router = express.Router();
 
 // Route to send SMS using Fast2SMS
 router.post('/send-sms', async (req, res) => {
-  const { vehicleNo, mobileNo, totalAmount, taxFromDate, taxUptoDate } = req.body;
+  const { vehicleNo, mobileNo, totalAmount, taxFromDate, taxUptoDate, uptNumber } = req.body;
+  // DLT template 190538: "...receipt no. UPT{#var#} and valid upto {#var#} 12:00 AM..." (UPT is fixed text)
+  const receiptSuffix = String(uptNumber || '').replace(/^UPT/i, '');
 
   // Construct the SMS message
   const smsMessage = `Your tax of Rs. ${totalAmount}/- has been paid for Vehicle No. ${vehicleNo}, valid from ${taxFromDate} 12:00 AM to ${taxUptoDate} 12:00 AM paid on ${new Date().toLocaleString()}. UVAHAN`;
@@ -29,7 +31,7 @@ router.post('/send-sms', async (req, res) => {
         route: 'dlt',
         sender_id: senderId,
         message: templateId,
-        variables_values: `${vehicleNo}|${totalAmount}|${taxFromDate}|${taxUptoDate}`,
+        variables_values: `${receiptSuffix}|${taxUptoDate}`,
         schedule_time: '',
         flash: 0,
         numbers: mobileNo,

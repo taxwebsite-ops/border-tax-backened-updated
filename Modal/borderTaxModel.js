@@ -8,6 +8,8 @@ const vehicleSchema = new mongoose.Schema({
   seatingCapacityExcludingDriver: String,
   sleeperCapacityExcludingDriver: String,
   borderBarrier: String,
+  borderBarrierDistrict: String,
+  borderBarrierCheckpost: String,
   totalAmount: String,
   ownerName: String,
   fromState: String,
